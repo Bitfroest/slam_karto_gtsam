@@ -1,0 +1,7 @@
+<launch>
+
+  <node pkg="slam_karto_gtsam" type="slam_karto_gtsam" name="slam_karto_gtsam" output="screen">
+    <!--<remap from="scan" to="base_scan" />-->
+  </node>
+
+</launch>
