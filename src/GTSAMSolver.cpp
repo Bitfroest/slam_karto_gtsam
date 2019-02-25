@@ -41,6 +41,9 @@ void GTSAMSolver::Compute() {
 
     graphNodes_.clear();
 
+    writeG2o(graph_, initialGuess_, "before_" + std::to_string(correctionStep_) + ".g2o");
+    ++correctionStep_;
+
     LevenbergMarquardtParams parameters;
 
     // Stop iterating once the change in error between steps is less than this value
@@ -56,6 +59,9 @@ void GTSAMSolver::Compute() {
     Values result = optimizer.optimize();
 
     Values::ConstFiltered <Pose2> viewPose2 = result.filter<Pose2>();
+
+    writeG2o(graph_, viewPose2, "after_" + std::to_string(correctionStep_) + ".g2o");
+    ++correctionStep_;
 
     // put values into corrections container
     for (const Values::ConstFiltered<Pose2>::KeyValuePair &key_value: viewPose2) {

@@ -17,6 +17,7 @@
 #include <gtsam/geometry/Pose2.h>
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 #include <gtsam/nonlinear/Marginals.h>
+#include <gtsam/slam/dataset.h>
 
 typedef std::vector <karto::Matrix3> CovarianceVector;
 
@@ -85,6 +86,8 @@ private:
     gtsam::Values initialGuess_;
 
     std::vector <Eigen::Vector2d> graphNodes_;
+
+    int correctionStep_ = 0;
 
 };
 
