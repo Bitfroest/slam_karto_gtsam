@@ -18,39 +18,38 @@
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 #include <gtsam/nonlinear/Marginals.h>
 
-typedef std::vector<karto::Matrix3> CovarianceVector;
+typedef std::vector <karto::Matrix3> CovarianceVector;
 
 /**
  * @brief Wrapper for G2O to interface with Open Karto
  */
-class GTSAMSolver : public karto::ScanSolver
-{
-  public:
+class GTSAMSolver : public karto::ScanSolver {
+public:
 
     GTSAMSolver();
-    
+
     virtual ~GTSAMSolver();
 
-  public:
-    
+public:
+
     /**
      * @brief Clear the vector of corrections
      * @details Empty out previously computed corrections
      */
     virtual void Clear();
-    
+
     /**
      * @brief Solve the SLAM back-end
      * @details Calls G2O to solve the SLAM back-end
      */
     virtual void Compute();
-    
+
     /**
      * @brief Get the vector of corrections
      * @details Get the vector of corrections
      * @return Vector with corrected poses
      */
-    virtual const karto::ScanSolver::IdPoseVector& GetCorrections() const;
+    virtual const karto::ScanSolver::IdPoseVector &GetCorrections() const;
 
     /**
      * @brief Add a node to pose-graph
@@ -58,15 +57,15 @@ class GTSAMSolver : public karto::ScanSolver
      * 
      * @param pVertex the node to be added in
      */
-    virtual void AddNode(karto::Vertex<karto::LocalizedRangeScan>* pVertex);
-    
+    virtual void AddNode(karto::Vertex <karto::LocalizedRangeScan> *pVertex);
+
     /**
      * @brief Add an edge constraint to pose-graph
      * @details Adds a relative pose measurement constraint between two poses in the graph
      * 
      * @param pEdge [description]
      */
-    virtual void AddConstraint(karto::Edge<karto::LocalizedRangeScan>* pEdge);
+    virtual void AddConstraint(karto::Edge <karto::LocalizedRangeScan> *pEdge);
 
     /**
      * @brief Get the pose-graph 
@@ -74,17 +73,18 @@ class GTSAMSolver : public karto::ScanSolver
      * 
      * @param g the graph
      */
-    void getGraph(std::vector<Eigen::Vector2d> &nodes, std::vector<std::pair<Eigen::Vector2d, Eigen::Vector2d> > &edges);
+    void
+    getGraph(std::vector <Eigen::Vector2d> &nodes, std::vector <std::pair<Eigen::Vector2d, Eigen::Vector2d>> &edges);
 
-  private:
-    
+private:
+
     karto::ScanSolver::IdPoseVector corrections_;
 
     gtsam::NonlinearFactorGraph graph_;
 
     gtsam::Values initialGuess_;
 
-    std::vector<Eigen::Vector2d> graphNodes_;
+    std::vector <Eigen::Vector2d> graphNodes_;
 
 };
 
