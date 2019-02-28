@@ -41,8 +41,9 @@ void GTSAMSolver::Compute() {
 
     graphNodes_.clear();
 
-    writeG2o(graph_, initialGuess_, "before_" + std::to_string(correctionStep_) + ".g2o");
-    ++correctionStep_;
+    //writeG2o(graph_, initialGuess_, "before_" + std::to_string(correctionStep_) + ".g2o");
+    //++correctionStep_;
+    WriteGraphFile("before_");
 
     LevenbergMarquardtParams parameters;
 
@@ -60,8 +61,8 @@ void GTSAMSolver::Compute() {
 
     Values::ConstFiltered <Pose2> viewPose2 = result.filter<Pose2>();
 
-    writeG2o(graph_, viewPose2, "after_" + std::to_string(correctionStep_) + ".g2o");
-    ++correctionStep_;
+    //writeG2o(graph_, viewPose2, "after_" + std::to_string(correctionStep_) + ".g2o");
+    //++correctionStep_;
 
     // put values into corrections container
     for (const Values::ConstFiltered<Pose2>::KeyValuePair &key_value: viewPose2) {
@@ -74,6 +75,7 @@ void GTSAMSolver::Compute() {
 
     }
 
+    wasOptimized = true;
 }
 
 void GTSAMSolver::AddNode(karto::Vertex <karto::LocalizedRangeScan> *pVertex) {
@@ -88,6 +90,13 @@ void GTSAMSolver::AddNode(karto::Vertex <karto::LocalizedRangeScan> *pVertex) {
     graphNodes_.push_back(Eigen::Vector2d(odom.GetX(), odom.GetY()));
 
     ROS_DEBUG("[gtsam] Adding node %d.", pVertex->GetObject()->GetUniqueId());
+
+    // add new vertex to nodes
+    nodes.push_back(pVertex);
+    if (wasOptimized) {
+        WriteGraphFile("after_");
+        wasOptimized = false;
+    }
 
 }
 
@@ -132,6 +141,9 @@ void GTSAMSolver::AddConstraint(karto::Edge <karto::LocalizedRangeScan> *pEdge) 
     // Add the constraint to the optimizer
     ROS_DEBUG("[gtsam] Adding Edge from node %d to node %d.", sourceID, targetID);
 
+    // add new edge to edges
+    edges.push_back(pEdge);
+
 }
 
 void GTSAMSolver::getGraph(std::vector <Eigen::Vector2d> &nodes,
@@ -174,4 +186,41 @@ void GTSAMSolver::getGraph(std::vector <Eigen::Vector2d> &nodes,
 
     // delete data2;
 
+}
+
+void GTSAMSolver::WriteGraphFile(std::string name) {
+    // save result to File
+    std::ofstream outputStream;
+    outputStream.open(name + std::to_string(optimizationNumber) + ".karto", std::ofstream::binary);
+
+    // write all vertices to the file
+    for (auto const &it: nodes) {
+        karto::Pose2 pose = it->GetObject()->GetCorrectedPose();
+        outputStream << "VERTEX_SE2 " << it->GetObject()->GetUniqueId() << " " << pose.GetX() << " " << pose.GetY()
+                     << " "
+                     << pose.GetHeading();
+
+        // append range data to the output Stream
+        for (int i = 0; i < it->GetObject()->GetNumberOfRangeReadings(); ++i) {
+            outputStream << " " << *(it->GetObject()->GetRangeReadings() + i);
+        }
+        outputStream << "\n";
+    }
+
+    // write all edges to the file
+    for (auto const &pEdge: edges) {
+        karto::LocalizedRangeScan *pSource = pEdge->GetSource()->GetObject();
+        karto::LocalizedRangeScan *pTarget = pEdge->GetTarget()->GetObject();
+        //karto::Edge <karto::LocalizedRangeScan> pEdgeV = pEdge;
+        karto::LinkInfo *pLinkInfo = (karto::LinkInfo * )(pEdge->GetLabel());
+
+        karto::Pose2 diff = pLinkInfo->GetPoseDifference();
+        outputStream << "EDGE_SE2 " << pSource->GetUniqueId() << " " << pTarget->GetUniqueId() << " " << diff.GetX()
+                     << " "
+                     << diff.GetY()
+                     << " " << diff.GetHeading() << " " << pLinkInfo->GetCovariance() << "\n";
+    }
+
+    outputStream.close();
+    ++optimizationNumber;
 }

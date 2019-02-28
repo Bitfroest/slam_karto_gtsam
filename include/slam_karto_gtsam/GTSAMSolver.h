@@ -79,6 +79,8 @@ public:
 
 private:
 
+    void WriteGraphFile(std::string name);
+
     karto::ScanSolver::IdPoseVector corrections_;
 
     gtsam::NonlinearFactorGraph graph_;
@@ -88,6 +90,14 @@ private:
     std::vector <Eigen::Vector2d> graphNodes_;
 
     int correctionStep_ = 0;
+
+    std::vector <karto::Vertex<karto::LocalizedRangeScan> *> nodes;
+
+    std::vector <karto::Edge<karto::LocalizedRangeScan> *> edges;
+
+    int optimizationNumber = 0;
+
+    bool wasOptimized = false;
 
 };
 
